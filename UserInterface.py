@@ -37,7 +37,6 @@ class UserInterface():
 
     def inputUser(self):
     #user input (initial)
-        self.username = input('Name: ')
         self.user_lon = input('Location Longitude: ')
         self.user_lat = input('Location Latitude: ')
         self.k = input('Top-K: ')
@@ -58,7 +57,12 @@ class UserInterface():
         for i in self.sd:
             print(i)
         print('Start Ranking in order: ')
-        rank = list(map(int, input().split()))
+        #rank = list(map(int, input().split()))
+        rank_str = raw_input()
+        rank_list = rank_str.split()
+        map_object = map(int, rank_list)
+        rank = list(map_object)
+        print(rank)
         idx = 0
         for i in self.sd:
             self.results[i[0]] = rank[idx]
@@ -73,6 +77,7 @@ if __name__ == "__main__":
     filename = "business.json"
     ui = UserInterface(2,3)	    #m,n값 실험하면서 변화
     ui.interaction()
+    ui.doKNN()
     #ui.doTopK()        #topklist returned
     #ui.outputuser(topkresult)
 	
