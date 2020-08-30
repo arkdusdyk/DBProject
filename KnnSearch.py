@@ -9,7 +9,7 @@ class knnsearch:
             
     def knn(self, data, currentlat, currentlon, k):
         knnlist = []
-        knn_id_list = list(index.nearest((currentlat, currentlon, currentlat, currentlon),k))#return only id
+        knn_id_list = list(self.index.nearest((currentlat, currentlon, currentlat, currentlon),k))#return only id
         data_dic = dict()
         #for searching by id, make dictionary
         for items in data:
