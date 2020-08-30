@@ -96,4 +96,3 @@ class preferenceestimation:
 #user.estimation(dic,4)
 #print(user.sample_data)
 #print(math.sin(math.radians(30)))
-
