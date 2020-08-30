@@ -2,6 +2,7 @@
 import json
 import preferenceestimation as pe
 import KnnSearch as knns
+import TopkSearch as topkk
 
 class UserInterface():
     def __init__(self, m, n):
@@ -10,8 +11,12 @@ class UserInterface():
         self.m = m
         self.n = n                  #preference estimation sample data
         self.poi = []                   #review count sorted list
+        print("Reading Data...")
         self.readData(filename)
+        print("Reading, sorting POI done...")
+        print("Initial Rtree Indexing...")
         self.knn = knns.knnsearch(self.data)        #knnsearch init, r-tree index
+        print("Rtree Indexing Done")
         self.inputUser()
         self.pepe = pe.preferenceestimation(self.n)    #sample generation
         self.sd = self.pepe.sample_data
@@ -43,13 +48,16 @@ class UserInterface():
     
     def doKNN(self):
         self.knnlist = self.knn.knn(self.data, self.user_lat, self.user_lon, self.k)
-        print(self.knnlist)
     
-    #def outputuser(self, topklist):
-        #return top-k result
+    def outputuser(self):
+        print(self.topklist)
 
-    #def doTopK(self):
-        #self.topklist
+    def doTopK(self):
+        print('Initialize TA-Algorithm')
+        self.topk = topkk.taalgorithm(self.data)
+        print('Processing TA Algorithm')
+        self.topklist = self.topk.topK(self.k, self.user_lat, self.user_lon, self.m, self.a, self.knnlist)
+        print('Top-k Done')
 
     def interaction(self):
         rank = []
@@ -62,15 +70,13 @@ class UserInterface():
         rank_list = rank_str.split()
         map_object = map(int, rank_list)
         rank = list(map_object)
-        print(rank)
         idx = 0
         for i in self.sd:
             self.results[i[0]] = rank[idx]
             idx = idx+1
-        print(self.results)
         self.pepe.estimation(self.results, self.n)
         self.a = self.pepe.preference
-        print(self.a)
+        print 'User Preference : {}'.format(self.a)
 
 
 if __name__ == "__main__":
@@ -78,6 +84,5 @@ if __name__ == "__main__":
     ui = UserInterface(2,3)	    #m,n값 실험하면서 변화
     ui.interaction()
     ui.doKNN()
-    #ui.doTopK()        #topklist returned
-    #ui.outputuser(topkresult)
-	
+    ui.doTopK()                 #topklist returned
+    ui.outputuser()
