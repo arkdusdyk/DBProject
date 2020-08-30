@@ -19,7 +19,7 @@ def dist(plat, plon, lat, lon):
 class taalgorithm:
     
     def __init__(self, data):
-        self.sorted_list= sorted(data, key = lambda x: x[1], reverdse = True)
+        self.sorted_list= sorted(data, key = lambda x: x[1], reverse = True)
 
     def topK(self, k, lat, lon,m,alpha, knnlist):
         #만일 top-k못찾으면 k 에 m*k 넣고 다시 실행
