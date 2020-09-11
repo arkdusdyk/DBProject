@@ -83,8 +83,18 @@ class preferenceestimation:
         # tangent calculation 
         # smallest = tan a / largest = tan b
         # weight(score function) = tan ((a+b)/2)
-        a = (-1 + math.sqrt(1+(smallest)*(smallest)))/3
-        b = (-1 + math.sqrt(1+(largest)*(largest)))/3
+       
+        if largest == 0:
+            #print('only minvalue')
+            a = (-1 + math.sqrt(1+(smallest)*(smallest)))/(smallest)
+            b = 0
+        elif smallest == 100000:
+            #print('only maxvalue')
+            a = 1
+            b = (-1 + math.sqrt(1+(largest)*(largest)))/(largest)
+        else:
+            a = (-1 + math.sqrt(1+(smallest)*(smallest)))/(smallest)
+            b = (-1 + math.sqrt(1+(largest)*(largest)))/(largest)
         self.preference = (a+b)/(1-(a*b))
         self.preference = round(self.preference,3)
         #print(self.preference)
@@ -96,3 +106,4 @@ class preferenceestimation:
 #user.estimation(dic,4)
 #print(user.sample_data)
 #print(math.sin(math.radians(30)))
+
