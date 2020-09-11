@@ -3,6 +3,7 @@ import json
 import preferenceestimation as pe
 import KnnSearch as knns
 import TopkSearch as topkk
+import time
 
 class UserInterface():
     def __init__(self, m, n):
@@ -20,7 +21,6 @@ class UserInterface():
         self.inputUser()
         self.pepe = pe.preferenceestimation(self.n)    #sample generation
         self.sd = self.pepe.sample_data
-	
 
     def readData(self, filename):
     #extract json file -> data list 에 [id, review, lat, long] 형식으로 저장 + poi 정렬해서 attribute로 저장
@@ -45,16 +45,17 @@ class UserInterface():
         self.user_lon = input('Location Longitude: ')
         self.user_lat = input('Location Latitude: ')
         self.k = input('Top-K: ')
-    
+        print(self.k)
+
     def doKNN(self):
-        self.knnlist = self.knn.knn(self.data, self.user_lat, self.user_lon, self.k)
-    
+        self.knnlist = self.knn.knn(self.data, self.user_lat, self.user_lon, self.k) #k*m-nn으로 변경-이승재
+
     def outputuser(self):
         print(self.topklist)
 
     def doTopK(self):
         print('Initialize TA-Algorithm')
-        self.topk = topkk.taalgorithm(self.data)
+        self.topk = topkk.taalgorithm(self.data, self.m)
         print('Processing TA Algorithm')
         self.topklist = self.topk.topK(self.k, self.user_lat, self.user_lon, self.m, self.a, self.knnlist)
         print('Top-k Done')
@@ -74,15 +75,18 @@ class UserInterface():
         for i in self.sd:
             self.results[i[0]] = rank[idx]
             idx = idx+1
+        start = time.time()         # process time 계산
         self.pepe.estimation(self.results, self.n)
         self.a = self.pepe.preference
-        print 'User Preference : {}'.format(self.a)
+        return start
 
 
 if __name__ == "__main__":
     filename = "business.json"
     ui = UserInterface(2,3)	    #m,n값 실험하면서 변화
-    ui.interaction()
+    start = ui.interaction()
     ui.doKNN()
     ui.doTopK()                 #topklist returned
+    print(time.time()- start)  #process time
     ui.outputuser()
+
