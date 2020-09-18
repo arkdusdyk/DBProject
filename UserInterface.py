@@ -3,7 +3,7 @@ import json
 import preferenceestimation as pe
 import KnnSearch as knns
 import TopkSearch as topkk
-import time
+import time 
 
 class UserInterface():
     def __init__(self, m, n):
@@ -12,6 +12,8 @@ class UserInterface():
         self.m = m
         self.n = n                  #preference estimation sample data
         self.poi = []                   #review count sorted list
+        self.option=0               #calculate alpha?(=0) or fixed alpha?(=1)
+        self.process_time = 0
         print("Reading Data...")
         self.readData(filename)
         print("Reading, sorting POI done...")
@@ -47,17 +49,24 @@ class UserInterface():
         self.k = input('Top-K: ')
         print(self.k)
 
+    def inputUser_ex(self, k, usr_lon, usr_lat, alpha):
+    #ex program input(initial)    
+        self.user_lon = usr_lon
+        self.user_lat = usr_lat
+        self.alpha = alpha
+        self.k = k
+
     def doKNN(self):
         self.knnlist = self.knn.knn(self.data, self.user_lat, self.user_lon, self.k) #k*m-nn으로 변경-이승재
-
+    
     def outputuser(self):
         print(self.topklist)
 
     def doTopK(self):
         print('Initialize TA-Algorithm')
-        self.topk = topkk.taalgorithm(self.data, self.m)
+        self.topk = topkk.taalgorithm(self.data, self.m, self.knn.index)
         print('Processing TA Algorithm')
-        self.topklist = self.topk.topK(self.k, self.user_lat, self.user_lon, self.m, self.a, self.knnlist)
+        self.topklist = self.topk.topK(self.k, self.user_lat, self.user_lon, self.m, self.a, self.knnlist,self.option)
         print('Top-k Done')
 
     def interaction(self):
@@ -75,9 +84,10 @@ class UserInterface():
         for i in self.sd:
             self.results[i[0]] = rank[idx]
             idx = idx+1
-        start = time.time()         # process time 계산
+        start = time.time()         # process time 계산 
         self.pepe.estimation(self.results, self.n)
         self.a = self.pepe.preference
+        print 'Score function : {}'.format(self.a)
         return start
 
 
@@ -87,6 +97,7 @@ if __name__ == "__main__":
     start = ui.interaction()
     ui.doKNN()
     ui.doTopK()                 #topklist returned
-    print(time.time()- start)  #process time
+    ui.process_time = time.time()- start  #process time
+    print(ui.process_time)
     ui.outputuser()
-
+	
