@@ -6,4 +6,5 @@ YELP Dataset: Contain location data, attributes.. (decompress business.json file
 need to install spatialindex library to use Rtree (download libspatialindex : open library)
 -> run with "python2 UserInterface.py"
 
-+files used in experiments..
++files used in experiments..(GroundTruth.py, experiment.py, accuracy.py)
++dataset.json (randomly generated dataset)
