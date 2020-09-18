@@ -1,7 +1,9 @@
 # DBProject
 User Interactive Top-k Search (Spatial + Keyword)
 
-YELP Dataset: Contain location data, attributes.. (decompress business.json file)
+YELP Dataset: Contain location data, attributes.. (decompress business.json file )-> open to public
 
-install spatialindex library (install Rtree)
+need to install spatialindex library to use Rtree (download libspatialindex : open livrary)
 -> run with "python2 UserInterface.py"
+
++files used in experiments..
