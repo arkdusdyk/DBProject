@@ -41,7 +41,7 @@ class preferenceestimation:
                 # x value -> 1, y value -> 2
                 x = p1[1]-p2[1]
                 y = p1[2]-p2[2]
-                slope = (float(y)/float(x))*(-1)
+                slope = (float(x)/float(y))*(-1)
                 slope = round(slope,2)
                 # H = higher rank , L = lower rank
                 # compare rank between 2 points

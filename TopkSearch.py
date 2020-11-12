@@ -4,121 +4,131 @@ from rtree import index
 from Queue import PriorityQueue
 import math
 import pprint as p
+import time
 #import KnnSearch as kn
 
 MAX_DISTANCE = 286.7599520843743 
 MAX_REV_COUNT = 7361.0
-DtoR = 0.0174533 #Degree to Radian
 
 def dist(plat, plon, lat, lon):
     delta = (plat-lat)**2 + (plon-lon)**2
     d = math.sqrt(delta)
     return d
 
+file_name = "output_%f"%time.time()
+#f = open(file_name,mode = 'wt')
+
 class taalgorithm:
     
     def __init__(self, data,m,idx):
         self.sorted_list= sorted(data, key = lambda x: x[1], reverse = True)
-        #self.knns = kn.knnsearch(data)
         self.fixed_m = m #m값 재귀함수에서 넘겨주기용    
         self.idx = idx
-            
+        self.useless_time = 0 #time for knn
+        self.lat = 0
+        self.lon = 0
+                    
     def topK(self, k, lat, lon, m, alpha_b, knnlist, option):
-        #만일 top-k못찾으면 k 에 m*k 넣고 다시 실행
-        #distance 수정
-        #option=1 when alpha is given
-        print(k, m) 
-        topklist = PriorityQueue(maxsize = k)
-        knndict = dict()
-        if option==1:
-            alpha = alpha_b
+        #m은 안씀
+        print(k,lat,lon)
+        topklist_ = PriorityQueue(maxsize = k)
+        #f.write(str(knnlist))
+        self.lat = lat
+        self.lon = lon
+        if (option==0):
+            alpha = 1/(1+alpha_b)
         else:
-            alpha = 1/(alpha_b+1)
-        print('alpha:',alpha)
-        
-        for knn in knnlist:
-            knndict[knn[0]]=knn[1:4]
-            #knndict's element = (id : [review, katitude, longitude]) 
-        i=0
-
-        """print("************************")
-        print("-------knnlist---------")
-        p.pprint(knnlist)
-        print("-------poi list--------")
-        p.pprint(self.sorted_list[0:len(knnlist)])
-        print("***********************")
-
-        print("____________________")"""
-        for key, value in knndict.items():
-            distance = (MAX_DISTANCE - dist(value[1], value[2], lat, lon))/MAX_DISTANCE
-            threshold = alpha*distance + (1-alpha)*(self.sorted_list[i][1]/MAX_REV_COUNT) #alpha*거리+(1-alpha)*평점
-            
-            
-            Q = alpha*distance+(1-alpha)*(value[0]/MAX_REV_COUNT)
-            print("|",Q,key, distance, value[0]/MAX_REV_COUNT,"|")
-            if topklist.full():
-                #mink는 score의 합과 id 둘다 갖는다.
-                mink = topklist.get()
-                if Q>mink[0]:
-                    topklist.put((Q,key))
-                else:
-                    topklist.put(mink)                
+            alpha = alpha_b
+        print alpha
+        #flag, counter는 while loop 용
+        flag = False
+        counter = 0
+        while flag == False:
+            if(counter < 50):
+                topklist_, flag = self.ThresholdAlgorithm(alpha, knnlist[counter],False, self.sorted_list[counter], topklist_)
+                counter += 1
             else:
-                topklist.put((Q,key))
-                
-                
-            Q = alpha*(MAX_DISTANCE-dist(self.sorted_list[i][2], self.sorted_list[i][3], lat, lon))/MAX_DISTANCE+ (1-alpha)*(self.sorted_list[i][1]/MAX_REV_COUNT)
-            normalized_dist = (MAX_DISTANCE-dist(self.sorted_list[i][2], self.sorted_list[i][3], lat, lon))/MAX_DISTANCE
-            print("|",Q, self.sorted_list[i][0],normalized_dist, self.sorted_list[i][1]/MAX_REV_COUNT,"|")
-            if topklist.full():
-                mink = topklist.get()
-                if Q>mink[0]:
-                    topklist.put((Q,self.sorted_list[i][0]))
-                else:
-                    topklist.put(mink)
-            else:
-                topklist.put((Q,self.sorted_list[i][0]))
-            i=i+1
-            mink = topklist.get()
-            if (mink[0] >= threshold):  #topklist의 최솟값이 threshold보다 크면
-                topklist.put(mink)
-                if(topklist.full()):
-                    topklist_ = []
-                    for j in range(k):
-                        topklist_.insert(0, topklist.get())
-                    #print(threshold)
-                    return topklist_
-                #else:
-                    #print("NOT FULL",alpha,mink,threshold)
-            else:   #topk list의 최솟값이 아직 threshold보다 작으면
-                #print("mink still low")
-                topklist.put(mink)
+                topklist_, flag = self.ThresholdAlgorithm(alpha, knnlist[50-1], True, self.sorted_list[counter], topklist_)
+                counter += 1
         
-        virtual_k = len(knnlist)
-        knnlist = self.knn(self.sorted_list,lat,lon, int(round(m * virtual_k)))
-        topklist_ = self.topK(k, lat, lon, m*self.fixed_m, alpha_b, knnlist, option)
-        topklist_ = topklist_[0:k]
-        return topklist_
+        final_topklist = list()
+        for i in range(0,k):
+            final_topklist.insert(0, topklist_.get())
 
-    def knn(self, data, currentlat, currentlon, k):
-        knnlist = []
-        knn_id_list = list(self.idx.nearest((currentlat, currentlon, currentlat, currentlon),k))#return only id
-        knn_id_list = map(int,knn_id_list)
-        #print(knn_id_list)
-        data_dic = dict()
-        #for searching by id, make dictionary
-        for items in data:
-            idfordata = '%d'%items[0]
-            data_dic[idfordata]=items[1:4]
-        for idxs in knn_id_list:
-            idx_str = '%d'%idxs
-            tmp = []
-            tmp = [idxs]
-            tmp.extend(data_dic[idx_str])
-            #tmp = [id, review, lat, lon] by knn
-            knnlist.append(tmp)
-        #print(knnlist)
-        return knnlist
+        return final_topklist
+
+    def ThresholdAlgorithm(self, alpha, knn_obj, last_knn_flag, poi_obj,topklist):
+        if(poi_obj[2] == None and poi_obj[3] == None):
+            return topklist, False
+        topklist_list = list()
+        topklist_list = topklist.queue
+        knn_dist = dist(self.lat, self.lon, knn_obj[2], knn_obj[3])
+        knn_dist = (MAX_DISTANCE - knn_dist)/MAX_DISTANCE
+        poi_dist = dist(self.lat, self.lon, poi_obj[2], poi_obj[3])
+        poi_dist = (MAX_DISTANCE - poi_dist)/MAX_DISTANCE
+        poi_rev = poi_obj[1]/MAX_REV_COUNT
+        knn_rev = knn_obj[1]/MAX_REV_COUNT
+        #all of above normalized
+        threshold = alpha*knn_dist+(1-alpha)*poi_rev #if mink is higher than threshold, set result_bool TRUE
+        score_of_knn = alpha*knn_dist+(1-alpha)*knn_rev
+        score_of_poi = alpha*poi_dist+(1-alpha)*poi_rev
+        result_bool = False
+        
+        """
+        f.write("\nt:")
+        f.write(str(threshold))
+        f.write(" knn: ")
+        f.write(str(score_of_knn))
+        f.write(" k.id rev dist:")
+        f.write(str(knn_obj[0]))
+        f.write(" ")
+        f.write(str(knn_obj[1]))
+        f.write(" ")
+        f.write(str(knn_dist))
+        f.write("|| poi: ")
+        f.write(str(score_of_poi))
+        f.write(" poi.id rev dist:")
+        f.write(str(poi_obj[0]))
+        f.write(" ")
+        f.write(str(poi_obj[1]))
+        f.write(" ")
+        f.write(str(poi_dist))
+        """
+
+        #for knn
+        if last_knn_flag == False:
+            if (not topklist.full()) and not((score_of_knn, knn_obj[0]) in topklist_list):
+                topklist.put((score_of_knn, knn_obj[0]))
+            elif topklist.full() and not((score_of_knn, knn_obj[0]) in topklist_list):
+                #f.write("\nqqq\n")
+                min_k = topklist.get()
+                if min_k[0] >= score_of_knn:
+                    topklist.put(min_k)
+                else:
+                    topklist.put((score_of_knn, knn_obj[0]))
+        #for poi
+        if not topklist.full() and not((score_of_poi, poi_obj[0]) in topklist_list):
+            topklist.put((score_of_poi, poi_obj[0]))
+        elif topklist.full() and not((score_of_poi, poi_obj[0]) in topklist_list):
+            #f.write("\n    aa    \n")
+            min_k = topklist.get()
+            if min_k[0] >= score_of_poi:
+                topklist.put(min_k)
+            else :
+                topklist.put((score_of_poi, poi_obj[0]))
+
+        #check threshold value
+        if not topklist.full():
+            result_bool = False
+        else:
+            min_k = topklist.get()
+            if min_k[0] >= threshold:
+                result_bool = True
+            else:
+                result_bool = False
+            topklist.put(min_k)
+
+        return topklist, result_bool
 
 if __name__ == '__main__':
     lat = input()

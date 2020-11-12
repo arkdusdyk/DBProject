@@ -57,7 +57,7 @@ class UserInterface():
         self.k = k
 
     def doKNN(self):
-        self.knnlist = self.knn.knn(self.data, self.user_lat, self.user_lon, self.k) #k*m-nn으로 변경-이승재
+        self.knnlist = self.knn.knn(self.data, self.user_lat, self.user_lon, 50) #k*m-nn으로 변경-이승재
     
     def outputuser(self):
         print(self.topklist)
